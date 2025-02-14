@@ -1,0 +1,152 @@
+@font-face {
+    font-family: "Newson GLS Bold";
+    font-weight: 400;
+    src: url("/css/gls_group_newsongls_web_bold_woff2.woff2") format("woff");
+}
+
+@font-face {
+    font-family: "Newson GLS";
+    font-weight: 100;
+    src: url("/css/gls_group_newsongls_web_regular_woff2.woff2") format("woff");
+}
+
+:root {
+    --brand-blue: #061AB1;
+    --brand-yellow: #FFD100;
+}
+
+html {
+    font-size: 16px;
+    font-family: "Newson GLS";
+    font-weight: 100;
+}
+
+html {
+    position: relative;
+    min-height: 100%;
+    background: #e7e8ed;
+    color: #333;
+}
+
+body {
+    margin: 0;
+}
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+    color: var(--bs-secondary-color);
+    text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+    text-align: start;
+}
+
+#todo-app {
+    width: 600px;
+    display: flex;
+    flex-direction: column;
+    margin-right: auto;
+    margin-left: auto;
+    height: calc(100vh - 20px);
+
+    input {
+        border-color: var(--brand-yellow);
+        color: var(--brand-blue);
+        height: 40px;
+        font-size: 20px;
+    }
+
+    hr.spacer {
+        width: 100%;
+        margin: 20px auto;
+        border-color: var(--brand-blue);
+    }
+
+    .top-wrapper {
+        display: flex;
+        flex-direction: column;
+
+        h1 {
+            margin-bottom: 0;
+            font-family: "Newson GLS Bold";
+            font-weight: 400;
+        }
+
+        h4 {
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+
+        .logout-link {
+            cursor: pointer;
+            text-decoration: underline;
+            color: var(--brand-blue);
+            align-self: end;
+        }
+    }
+
+    .login-form {
+        display: flex;
+        flex-direction: row;
+    }
+
+
+    .item-list {
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        flex-grow: 1;
+        margin-bottom: 20px;
+
+        .item {
+            display: flex;
+            flex-direction: row;
+            margin: 10px 5px;
+            font-size: 20px;
+            border: 5px solid var(--brand-yellow);
+            border-radius: 15px;
+            padding: 10px;
+            background-color: var(--brand-blue);
+            color: #dddddd;
+            cursor: pointer;
+
+            &:hover {
+                filter: brightness(0.9);
+            }
+
+            .chk-toggle {
+                width: 20px;
+                height: 20px;
+                margin: auto 15px;
+            }
+
+            .item-remove {
+                font-family: monospace;
+                font-size: 20px;
+                cursor: pointer;
+                margin: auto 20px auto 10px;
+
+                &:hover {
+                    color: #bb2d3b;
+                }
+            }
+
+            &.complete {
+                text-decoration: line-through;
+                opacity: .8;
+                filter: grayscale(75%);
+            }
+        }
+
+    }
+
+    .task-add {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        
+        input[type="text"] {
+            flex-grow: 1;
+        }
+    }
+}
