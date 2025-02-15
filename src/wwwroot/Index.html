@@ -2,80 +2,122 @@
 <html lang="en">
   <head>
     <title>Good List System - Check that Box</title>
-    <link rel="stylesheet" href="/css/site.css" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
     <script src="https://unpkg.com/vue@3/dist/vue.global.js" defer></script>
     <script src="/js/site.js" defer></script>
   </head>
-  <body>
-    <!-- Todo App Component -->
-    <div id="todo-app">
-      <div class="top-wrapper">
-        <h1>Good List System</h1>
-        <h4>
+  <body class="bg-gray-50 font-sans">
+    <div id="todo-app" class="max-w-3xl mx-auto p-6">
+      <!-- Header -->
+      <div class="text-center mb-6">
+        <h1 class="text-4xl font-bold text-blue-600">Good List System</h1>
+        <h4 class="text-lg text-gray-600 mt-2">
           Go check that
           <b
             ><i><u>Box</u></i></b
           >!
         </h4>
-        <a v-if="store.token" class="logout-link" @click="logout">Logout</a>
-        <hr class="spacer" />
+        <a
+          v-if="!!store.token"
+          class="text-sm text-blue-500 cursor-pointer"
+          @click="logout"
+          >Logout</a
+        >
+        <hr class="my-6 border-t border-gray-300" />
       </div>
+
+      <!-- Task List -->
       <task-list v-if="store.token"></task-list>
+
+      <!-- Login Form -->
       <login v-else></login>
     </div>
 
     <!-- Login component -->
     <template id="login">
-      <p>
-        Login to see your tasks. Enter your super secret user name below and
-        click "Login".
-      </p>
-      <div class="login-form">
-        <input type="text" v-model="userName" @keyup.enter="login" />
-        &nbsp;
-        <input type="button" @click="login" value="Login" />
+      <div class="text-center">
+        <p class="mb-4 text-gray-700">
+          Login to see your tasks. Enter your super secret user name below and
+          click "Login".
+        </p>
+        <div class="login-form">
+          <input
+            type="text"
+            v-model="userName"
+            class="px-4 py-2 border border-gray-300 rounded-md shadow-sm mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            @keyup.enter="login"
+          />
+          <br />
+          <input
+            type="button"
+            @click="login"
+            value="Login"
+            class="bg-blue-600 text-white py-2 px-6 rounded-md mt-2 cursor-pointer hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
       </div>
     </template>
 
     <!-- Task list component -->
     <template id="task-list">
-      <span
-        >Items ({{ completeCount }} tasks complete/{{ incompleteCount }} tasks
-        incomplete):</span
-      >
-      <div class="item-list">
-        <task-item
-          @item-updated="updateList"
-          v-for="item in items"
-          :key="item.id"
-          :item="item"
-        ></task-item>
-      </div>
-      <hr class="spacer" />
-      <div class="task-add">
-        <span>Add new item to list:&nbsp;</span>
-        <input
-          ref="taskInput"
-          type="text"
-          v-model="newItemText"
-          @keyup.enter="addItem"
-        />&nbsp;
-        <input type="button" value="Add" @click="addItem" />
+      <div class="text-center">
+        <span class="text-sm text-gray-600 mb-4 block"
+          >Items ({{ completeCount }} tasks complete / {{ incompleteCount }}
+          tasks incomplete):</span
+        >
+        <div class="item-list space-y-3">
+          <task-item
+            @item-updated="updateList"
+            v-for="item in items"
+            :key="item.id"
+            :item="item"
+            class="flex items-center justify-between bg-white p-4 rounded-lg shadow-md hover:bg-gray-50"
+          />
+        </div>
+        <hr class="my-6 border-t border-gray-300" />
+        <div class="task-add space-x-4">
+          <span class="text-sm text-gray-700">Add new item to list:</span>
+          <input
+            ref="taskInput"
+            type="text"
+            v-model="newItemText"
+            class="px-4 py-2 border border-gray-300 rounded-md shadow-sm mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            @keyup.enter="addItem"
+          />
+          <input
+            type="button"
+            value="Add"
+            @click="addItem"
+            class="bg-blue-600 text-white py-2 px-6 rounded-md mt-2 cursor-pointer hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
       </div>
     </template>
 
     <!-- Task item component -->
     <template id="task-item">
-      <div @click.stop="toggle(item.id)" class="item" :class="itemClass">
+      <div class="flex items-center justify-between">
         <input
           type="checkbox"
-          class="chk-toggle"
-          v-bind:checked="item.isCompleted"
+          class="chk-toggle rounded-full border-gray-300"
+          :checked="item.isCompleted"
+          @click.stop="toggle(item.id)"
         />
-        <a title="Remove item" class="item-remove" @click.stop="remove(item.id)"
-          >X</a
+        <span
+          class="ml-3 text-gray-700 flex-1"
+          :class="{'line-through text-gray-400': item.isCompleted}"
+          v-html="item.text"
+        ></span>
+        <a
+          title="Remove item"
+          class="text-red-600 cursor-pointer"
+          @click.stop="remove(item.id)"
         >
-        <span v-html="item.text"></span>
+          X
+        </a>
       </div>
     </template>
   </body>
