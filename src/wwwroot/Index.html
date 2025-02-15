@@ -1,61 +1,82 @@
 ﻿<!DOCTYPE html>
-<html !doctype="html" lang="en">
-<head>
+<html lang="en">
+  <head>
     <title>Good List System - Check that Box</title>
-    <link rel="stylesheet" href="/css/site.css">
+    <link rel="stylesheet" href="/css/site.css" />
     <script src="https://unpkg.com/vue@3/dist/vue.global.js" defer></script>
     <script src="/js/site.js" defer></script>
-</head>
-<body>
-
-<!-- Todo App Component -->
-<div id="todo-app">
-    <div class="top-wrapper">
+  </head>
+  <body>
+    <!-- Todo App Component -->
+    <div id="todo-app">
+      <div class="top-wrapper">
         <h1>Good List System</h1>
-        <h4>Go check that <b><i><u>Box</u></i></b>!</h4>
-        <a v-if="!!store.token" class="logout-link" @click="logout">Logout</a>
-        <hr class="spacer">
+        <h4>
+          Go check that
+          <b
+            ><i><u>Box</u></i></b
+          >!
+        </h4>
+        <a v-if="store.token" class="logout-link" @click="logout">Logout</a>
+        <hr class="spacer" />
+      </div>
+      <task-list v-if="store.token"></task-list>
+      <login v-else></login>
     </div>
-    <task-list v-if="store.token"></task-list>
-    <login v-else></login>
-</div>
 
+    <!-- Login component -->
+    <template id="login">
+      <p>
+        Login to see your tasks. Enter your super secret user name below and
+        click "Login".
+      </p>
+      <div class="login-form">
+        <input type="text" v-model="userName" @keyup.enter="login" />
+        &nbsp;
+        <input type="button" @click="login" value="Login" />
+      </div>
+    </template>
 
-<!-- Login component -->
-<template id="login">
-    <p>
-        Login to see your tasks. Enter your super secret user name below and click "Login".
-    </p>
-    <div class="login-form">
-        <input ref="userName" type="text" v-model="userName" @keyup.enter="login"> &nbsp;
-        <input type="button" @click="login" value="Login"/>
-    </div>
-</template>
-
-
-<!-- Task list component -->
-<template id="task-list">
-    <span>Items ({{ completeCount }} tasks complete/{{ incompleteCount }} tasks incomplete):</span>
-    <div class="item-list">
-        <task-item @item-updated="updateList" v-for="item in items" :item></task-item>
-    </div>
-    <hr class="spacer">
-    <div class="task-add">
+    <!-- Task list component -->
+    <template id="task-list">
+      <span
+        >Items ({{ completeCount }} tasks complete/{{ incompleteCount }} tasks
+        incomplete):</span
+      >
+      <div class="item-list">
+        <task-item
+          @item-updated="updateList"
+          v-for="item in items"
+          :key="item.id"
+          :item="item"
+        ></task-item>
+      </div>
+      <hr class="spacer" />
+      <div class="task-add">
         <span>Add new item to list:&nbsp;</span>
-        <input ref="taskInput" type="text" v-model="newItemText" @keyup.enter="addItem"/>&nbsp;
-        <input type="button" value="Add" @click="addItem"/>
-    </div>
-</template>
+        <input
+          ref="taskInput"
+          type="text"
+          v-model="newItemText"
+          @keyup.enter="addItem"
+        />&nbsp;
+        <input type="button" value="Add" @click="addItem" />
+      </div>
+    </template>
 
-
-<!-- Task item component -->
-<template id="task-item">
-    <div @click.stop="toggle(item.id)" class="item" :class="itemClass">
-        <input type="checkbox" class="chk-toggle" v-bind:checked="item.isCompleted"/>
-        <a title="Remove item" class="item-remove" @click.stop="remove(item.id)">X</a>
+    <!-- Task item component -->
+    <template id="task-item">
+      <div @click.stop="toggle(item.id)" class="item" :class="itemClass">
+        <input
+          type="checkbox"
+          class="chk-toggle"
+          v-bind:checked="item.isCompleted"
+        />
+        <a title="Remove item" class="item-remove" @click.stop="remove(item.id)"
+          >X</a
+        >
         <span v-html="item.text"></span>
-    </div>
-</template>
-
-</body>
+      </div>
+    </template>
+  </body>
 </html>
