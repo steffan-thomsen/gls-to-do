@@ -1,162 +1,205 @@
 ﻿(function () {
-    "use strict"
+  'use strict';
 
-    const userStore = Vue.reactive({
-        currentUser: undefined,
-        token: undefined,
-    });
+  // Reactive global store
+  const userStore = Vue.ref({
+    currentUser: null,
+    token: null,
+  });
 
+  // Helper function for API calls
+  async function apiCall(url, method = 'GET', body = null, token = null) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
 
-    const Login = {
-        template: '#login',
-        data() {
-            return {
-                store: userStore,
-                userName: "",
-            }
-        },
-        methods: {
-            login() {
-                /// This endpoint doesn't take a password. It's intentional :)
-                fetch('/api/Auth/Authenticate?userName=' + encodeURIComponent(this.userName), {
-                    method: 'POST',
-                    headers: {
-                        "Content-Type": "application/json"
-                    }
-                }).then(resp => resp.text().then(token => {
-                    this.store.token = token;
-                    this.store.currentUser = this.userName;
-                }));
-            }
-        },
-        mounted() {
-            this.$refs.userName.focus();
-        }
+    try {
+      const response = await fetch(url, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : null,
+      });
+      if (!response.ok)
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      return response.json();
+    } catch (error) {
+      console.error('API error:', error);
+      return null;
     }
+  }
 
-
-    const TaskList = {
-        template: '#task-list',
-        data() {
-            return {
-                items: [],
-                newItemText: "",
-                store: userStore
+  // Login Component
+  const Login = {
+    template: '#login',
+    data() {
+      return {
+        store: userStore,
+        userName: '',
+      };
+    },
+    methods: {
+      async login() {
+        try {
+          const resp = await fetch(
+            `/api/Auth/Authenticate?userName=${encodeURIComponent(
+              this.userName
+            )}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
             }
-        },
-        methods: {
-            addItem() {
-                if (this.newItemText.length < 1) return;
+          );
 
-                fetch('/api/Task/Add', {
-                    method: 'POST',
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": "Bearer " + this.store.token,
-                    },
-                    body: JSON.stringify({
-                        text: this.newItemText,
-                        owner: this.store.currentUser,
-                        isCompleted: false,
-                    }),
-                }).then(resp => resp.json().then(task => {
-                    this.updateList();
-                    this.newItemText = "";
-                }));
+          if (!resp.ok) throw new Error('Login failed');
 
+          this.store.token = await resp.text();
+          this.store.currentUser = this.userName;
+        } catch (error) {
+          console.error('Login error:', error);
+        }
+      },
+    },
+    mounted() {
+      this.$nextTick(() => {
+        this.$refs.userName?.focus();
+      });
+    },
+  };
+
+  // Task List Component
+  const TaskList = {
+    template: '#task-list',
+    data() {
+      return {
+        items: [],
+        newItemText: '',
+        store: userStore,
+      };
+    },
+    methods: {
+      async addItem() {
+        if (this.newItemText.length < 1) return;
+
+        const task = await apiCall(
+          '/api/Task/Add',
+          'POST',
+          {
+            text: this.newItemText,
+            owner: this.store.currentUser,
+            isCompleted: false,
+          },
+          this.store.token
+        );
+
+        if (task) {
+          this.newItemText = '';
+          this.updateList();
+        }
+      },
+      async updateList() {
+        const tasks = await apiCall(
+          `/api/Task/List?userName=${encodeURIComponent(
+            this.store.currentUser
+          )}`,
+          'GET',
+          null,
+          this.store.token
+        );
+        if (tasks) this.items = tasks;
+      },
+    },
+    computed: {
+      completeCount() {
+        return this.items.filter((q) => q.isCompleted).length;
+      },
+      incompleteCount() {
+        return this.items.filter((q) => !q.isCompleted).length;
+      },
+    },
+    mounted() {
+      console.log('TaskList mounted');
+      this.updateList();
+      this.$nextTick(() => this.$refs.taskInput.focus());
+    },
+  };
+
+  // Task Item Component
+  const TaskItem = {
+    template: '#task-item',
+    props: {
+      item: {
+        type: Object,
+        required: true,
+      },
+    },
+    emits: ['itemUpdated'],
+    data() {
+      return {
+        store: userStore,
+      };
+    },
+    computed: {
+      itemClass() {
+        return this.item.isCompleted ? 'complete' : 'incomplete';
+      },
+    },
+    methods: {
+      async toggle(itemId) {
+        try {
+          const resp = await fetch(`/api/Task/Toggle?taskId=${itemId}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${this.store.token}`,
             },
-            updateList() {
-                fetch('/api/Task/List?userName=' + encodeURIComponent(this.store.currentUser), {
-                    method: 'GET',
-                    headers: {
-                        "Authorization": "Bearer " + this.store.token,
-                    }
-                }).then(resp => resp.json().then(tasks => {
-                    this.items = tasks;
-                }));
-            }
-        },
-        computed: {
-            completeCount() {
-                return this.items.filter(q => q.isCompleted).length;
-            },
-            incompleteCount() {
-                return this.items.filter(q => !q.isCompleted).length;
-            }
-        },
-        mounted() {
-            console.log("TaskList mounted");
-            this.updateList();
-            this.$refs.taskInput.focus();
-        }
-    }
+          });
 
-    const TaskItem = {
-        template: '#task-item',
-        props: {
-            item: Object,
-        },
-        data() {
-            return {
-                store: userStore,
-            }
-        },
-        computed: {
-            itemClass() {
-                return this.item.isCompleted ? "complete" : "incomplete";
-            }
-        },
-        emits: [
-            "itemUpdated"
-        ],
-        methods: {
-            toggle(itemId) {
-                console.log("Toggle", itemId);
-                fetch('/api/Task/Toggle?taskId=' + itemId, {
-                    method: 'PUT',
-                    headers: {
-                        "Authorization": "Bearer " + this.store.token,
-                    }
-                }).then(resp => {
-                    this.$emit("itemUpdated");
-                });
-            },
-            remove(itemId) {
-                console.log("Remove", itemId);
-                fetch('/api/Task/Remove?taskId=' + itemId, {
-                    method: 'DELETE',
-                    headers: {
-                        "Authorization": "Bearer " + this.store.token,
-                    }
-                }).then(resp => {
-                });
-            }
-        },
-        mounted() {
-            console.log("TaskItem mounted");
+          if (!resp.ok) throw new Error('Toggle failed');
+          this.$emit('itemUpdated');
+        } catch (error) {
+          console.error('Toggle error:', error);
         }
-    }
-
-    const TodoApp = {
-        data() {
-            return {
-                store: userStore,
-            }
-        },
-        methods: {
-          logout() {
-              this.store.token = undefined;
-              this.store.currentUser = undefined;
-          }  
-        },
-        created() {
-            console.log("TodoApp created");
+      },
+      async remove(itemId) {
+        console.log('Remove', itemId);
+        const result = await apiCall(
+          `/api/Task/Remove?taskId=${itemId}`,
+          'DELETE',
+          null,
+          this.store.token
+        );
+        if (result) {
+          console.log(result.message);
+          this.$emit('itemUpdated');
         }
-    }
+      },
+    },
+    mounted() {
+      console.log('TaskItem mounted');
+    },
+  };
 
-    const app = Vue.createApp(TodoApp);
-    app.component('login', Login);
-    app.component('task-list', TaskList);
-    app.component('task-item', TaskItem);
-    app.mount("#todo-app");
+  // Main Todo App Component
+  const TodoApp = {
+    data() {
+      return {
+        store: userStore,
+      };
+    },
+    methods: {
+      logout() {
+        this.store.token = undefined;
+        this.store.currentUser = undefined;
+      },
+    },
+    created() {
+      console.log('TodoApp created');
+    },
+  };
+
+  // Vue App Initialization
+  const app = Vue.createApp(TodoApp);
+  app.component('login', Login);
+  app.component('task-list', TaskList);
+  app.component('task-item', TaskItem);
+  app.mount('#todo-app');
 })();

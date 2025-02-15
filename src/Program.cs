@@ -29,9 +29,11 @@ builder.Services.AddAuthentication().AddJwtBearer(opts =>
     opts.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
-        ValidIssuer = "http://quick-task/auth",
+        // ValidIssuer = "http://quick-task/auth",
+        ValidIssuer = "http://localhost:8080",
         ValidateAudience = true,
-        ValidAudience = "http://quick-task/task",
+        // ValidAudience = "http://quick-task/task",
+        ValidAudience = "http://localhost:8080",
         ValidateIssuerSigningKey = true,
         ValidateLifetime = true,
         IssuerSigningKey = new SymmetricSecurityKey(secret)

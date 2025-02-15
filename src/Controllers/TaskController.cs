@@ -22,49 +22,52 @@ public class TaskController : Controller
     private string? GetUserName()
     {
         var authHeader = HttpContext.Request.Headers.Authorization.ToString();
-        var token = authHeader.StartsWith("Bearer ") ? authHeader["Bearer ".Length..] : authHeader;
+        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer ")) return null;
+
+        var token = authHeader["Bearer ".Length..];
         var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
-        var userName = jwt.Claims.Single(c => c.Type == JwtRegisteredClaimNames.NameId).Value;
+        var userName = jwt.Claims.SingleOrDefault(c => c.Type == JwtRegisteredClaimNames.NameId)?.Value;
 
         return userName;
     }
-    
 
     [Authorize]
     [HttpGet("List")]
-    public async Task<IActionResult> List(string userName)
+    public async Task<IActionResult> List()
     {
-        var tokenUser = GetUserName();
-        if (tokenUser is null) return Unauthorized();
+        var userName = GetUserName();
+        if (userName is null) return Unauthorized();
 
         var tasks = await _dataContext.Tasks.Where(q => q.Owner == userName).OrderBy(q => q.CreatedTime).ToListAsync();
 
         return Ok(tasks);
     }
-    
 
     [Authorize]
     [HttpPost("Add")]
-    public async Task<IActionResult> Add(TaskDto task)
+    public async Task<IActionResult> Add([FromBody] TaskDto taskDto)
     {
         var userName = GetUserName();
         if (userName is null) return Unauthorized();
 
-        await _dataContext.Tasks.AddAsync(task);
+        taskDto.Id = Guid.NewGuid();
+        taskDto.Owner = userName;
+        taskDto.CreatedTime = DateTime.UtcNow;
+
+        await _dataContext.Tasks.AddAsync(taskDto);
         await _dataContext.SaveChangesAsync();
 
-        return Ok(task);
+        return Ok(taskDto);
     }
-    
 
     [Authorize]
     [HttpPut("Toggle")]
-    public async Task<IActionResult> Add(Guid taskId)
+    public async Task<IActionResult> Toggle(Guid taskId)
     {
         var userName = GetUserName();
         if (userName is null) return Unauthorized();
 
-        var task = await _dataContext.Tasks.SingleOrDefaultAsync(t => t.Id == taskId);
+        var task = await _dataContext.Tasks.SingleOrDefaultAsync(t => t.Id == taskId && t.Owner == userName);
         if (task is null) return NotFound();
 
         task.IsCompleted = !task.IsCompleted;
@@ -72,7 +75,6 @@ public class TaskController : Controller
 
         return Ok(task);
     }
-    
 
     [Authorize]
     [HttpDelete("Remove")]
@@ -81,12 +83,12 @@ public class TaskController : Controller
         var userName = GetUserName();
         if (userName is null) return Unauthorized();
 
-        var task = await _dataContext.Tasks.SingleOrDefaultAsync(t => t.Id == taskId);
+        var task = await _dataContext.Tasks.SingleOrDefaultAsync(t => t.Id == taskId && t.Owner == userName);
         if (task is null) return NotFound();
 
         _dataContext.Tasks.Remove(task);
-        _dataContext.SaveChangesAsync();
+        await _dataContext.SaveChangesAsync();
 
-        return Ok();
+        return Ok(new { message = "Task removed successfully" }); 
     }
 }
