@@ -67,7 +67,9 @@ public class TaskController : Controller
         var userName = GetUserName();
         if (userName is null) return Unauthorized();
 
-        var task = await _dataContext.Tasks.SingleOrDefaultAsync(t => t.Id == taskId && t.Owner == userName);
+        var task = await _dataContext.Tasks
+            .SingleOrDefaultAsync(t => t.Id == taskId && t.Owner == userName);
+        
         if (task is null) return NotFound();
 
         task.IsCompleted = !task.IsCompleted;
@@ -83,12 +85,14 @@ public class TaskController : Controller
         var userName = GetUserName();
         if (userName is null) return Unauthorized();
 
-        var task = await _dataContext.Tasks.SingleOrDefaultAsync(t => t.Id == taskId && t.Owner == userName);
-        if (task is null) return NotFound();
+        var task = await _dataContext.Tasks
+            .SingleOrDefaultAsync(t => t.Id == taskId && t.Owner == userName);
+        
+        if (task is null) return NotFound(); // Task found only if owned by the logged-in user
 
         _dataContext.Tasks.Remove(task);
         await _dataContext.SaveChangesAsync();
 
-        return Ok(new { message = "Task removed successfully" }); 
+        return Ok(new { message = "Task removed successfully" });
     }
 }

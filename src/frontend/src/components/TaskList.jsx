@@ -9,17 +9,18 @@ function TaskList({ token, currentUser }) {
   const [newItemText, setNewItemText] = useState('');
 
   useEffect(() => {
-    async function fetchTasks() {
-      const tasks = await apiCall(
-        `/api/Task/List?userName=${encodeURIComponent(currentUser)}`,
-        'GET',
-        null,
-        token
-      );
-      setItems(tasks || []);
-    }
+    const fetchTasks = async () => {
+      const resp = await fetch('/api/Task/List', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await resp.json();
+      setItems(data);
+    };
+
     fetchTasks();
-  }, [currentUser, token]);
+  }, [token, currentUser]);
 
   const addItem = async () => {
     if (newItemText.length < 1) return;
@@ -39,7 +40,6 @@ function TaskList({ token, currentUser }) {
       });
     }
   };
-
   const completeCount = items.filter((item) => item.isCompleted).length;
   const incompleteCount = items.filter((item) => !item.isCompleted).length;
 
@@ -79,6 +79,7 @@ function TaskList({ token, currentUser }) {
     </div>
   );
 }
+
 TaskList.propTypes = {
   token: PropTypes.string.isRequired,
   currentUser: PropTypes.string.isRequired,

@@ -15,6 +15,8 @@ function Login({ onLogin }) {
         }
       );
 
+      console.log('resp: ', resp);
+
       if (!resp.ok) throw new Error('Login failed');
       const token = await resp.text();
       onLogin(token, userName);

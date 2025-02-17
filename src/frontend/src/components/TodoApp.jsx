@@ -11,6 +11,9 @@ function TodoApp() {
     setCurrentUser(userName);
   };
 
+  console.log('token: ', token);
+  console.log('currentUser: ', currentUser);
+
   const handleLogout = () => {
     setToken(null);
     setCurrentUser(null);

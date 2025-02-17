@@ -25,6 +25,15 @@ function TaskItem({ item, token, setItems }) {
       toast.success('Task status updated!', {
         autoClose: 1200,
       });
+
+      // Update the parent list of tasks
+      setItems((prevItems) =>
+        prevItems.map((task) =>
+          task.id === item.id
+            ? { ...task, isCompleted: newCompletionStatus }
+            : task
+        )
+      );
     } else {
       console.error('Failed to toggle task');
       setItemState((prevState) => ({
